@@ -26,10 +26,33 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
         let result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
             .then((response: AxiosResponse<any> | undefined) => response?.data.value.map((item: any) => item.id));
 
+        writeGroupUrlsToFile(result, `${groupMatch[1]}`);
+
         return result;
     }
 
     return null;
+}
+
+
+/**
+ * If it is a group urls write the video urls into a list.
+ * The file will be saved into project folder
+ * File is named as group-{guid}.txt
+ *
+ * @param {Array<string>} vUids         list of video UIDs
+ * @param {string}        gUid          the GUID of the group links
+ *
+ */
+function writeGroupUrlsToFile(vUids: Array<string>, gUid: string): void {
+
+    fs.writeFile(`./group-${gUid}.txt`, vUids.map(uid => 'https://web.microsoftstream.com/video/' + uid).join('\n'), function(err) {
+        if (err) {
+            return logger.error(err);
+        }
+
+        logger.info(`Video urls in group was saved to group-${gUid}.txt. If got disconnected edit and use this list to resume download.`.green);
+    });
 }
 
 
